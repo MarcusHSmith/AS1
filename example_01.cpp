@@ -57,8 +57,8 @@ std::vector<float> ks(3);
 float sp;
 
 // Lights [x, y, z, r, g, b]
-std::vector< std::vector<float> > point_lights(5);
-std::vector< std::vector<float> > directional_lights(5);
+std::vector< std::vector<float> > point_lights;
+std::vector< std::vector<float> > directional_lights;
 
 
 //****************************************************
@@ -139,6 +139,14 @@ vector<float> scale_vector(int a, vector<float> v ) {
   return v;
 }
 
+vector<float> normalize(vector<float> v){
+  float mag = abs( sqrt( v.at(0) * v.at(0) + v.at(1) * v.at(1) + v.at(2) * v.at(2) ) );
+  v.at(0) = v.at(0) / mag;
+  v.at(1) = v.at(1) / mag;
+  v.at(2) = v.at(2) / mag;
+  return v;
+}
+
 void circle(float centerX, float centerY, float radius) {
       
   // Draw inner circle
@@ -179,6 +187,7 @@ void circle(float centerX, float centerY, float radius) {
         // PseudoCode
 
         std::vector<float> rgb(3);
+        std::vector<float> Rm(3);
         std::vector<float> surface_normal(3);
 
 
@@ -196,44 +205,54 @@ void circle(float centerX, float centerY, float radius) {
         surface_normal.at(2) = z;
 
         // for( std::vector<float>::const_iterator i = rgb.begin(); i != rgb.end(); ++i)
-        //    std::cout << to_string(*i) << ' ';
+        //    std::cout << to_string(*)) << ' ';
         // std::cout << "\n" << ' ';
-        // N = Normal at this point on surface; //used to be in every iteration of loop
 
-        std::vector< std::vector<float> >::iterator row;
-        std::vector<float>::iterator light;
-        for( row = directional_lights.begin(); row != directional_lights.end(); row ++){
-          for (light = row->begin(); light != row->end(); light++) {
-            Rm =  subtract_vectors( scale_vector( 2 * dot_vectors( normalize(*light.L), N ), surface_normal ), N ),
-                                    *light.L );
+        // Comment back in for directional Lights
+        // std::vector< std::vector<float> >::iterator row;
+        // std::vector<float>::iterator light;
+        // for( row = directional_lights.begin(); row != directional_lights.end(); row ++){
+        //   for (light = row->begin(); light != row->end(); light++) {
+        //     Rm =  subtract_vectors( scale_vector( 2 * dot_vectors( normalize(*light.L), surface_normal ), surface_normal ), surface_normal ),
+        //                             *light.L );
             
-            rgb = add_vectors( rgb, add_vectors( scale_vector( max( 0, dot_vectors( *light.L, surface_normal) ), kd ), 
-                                                 scale_vector( max( 0, pow( dot_vectors( Rm,  normalize(*light.L) ), sp ) ), ks ) ) );
-            // sum += ( kd * max(0, ( *light.L dot normalize(N) )) * *light.color )
-            //        + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
-          }
-        }
+        //     rgb = add_vectors( rgb, add_vectors( scale_vector( max( 0, dot_vectors( *light.L, surface_normal) ), kd ), 
+        //                                          scale_vector( max( 0, pow( dot_vectors( Rm,  normalize(*light.L) ), sp ) ), ks ) ) );
+        //     // sum += ( kd * max(0, ( *light.L dot normalize(N) )) * *light.color )
+        //     //        + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
+        //   }
+        // }
+    
+        std::vector< std::vector<float> >::const_iterator light2;
+        // std::vector<float>::iterator light2;
+        std::vector<float> L(3);
+        for ( light2 = point_lights.begin(); light2 != point_lights.end(); ++light2 ) {
+          // Creates light vector from surface point to light source.
+          L.at(0) = x - (*light2).at(0);
+          L.at(1) = y - (*light2).at(1);
+          L.at(2) = z - (*light2).at(2);
 
+          // Reflection
+          Rm =  subtract_vectors( scale_vector( 2 * dot_vectors( normalize(L), surface_normal ),
+                                                surface_normal ),
+                                  normalize(L) );
+                                  
           
-        std::vector< std::vector<float> >::iterator row2;
-        std::vector<float>::iterator light2;
-        for( row2 = point_lights.begin(); row2 != point_lights.end(); row2 ++){
-          for (light2 = row2->begin(); light2 != row2->end(); light2++){
-            // Rm = ( 2 * ( normalize(*light2.L) dot normalize(N) ) * normalize(N) ) - *light2.L;
-            // sum += ( kd * max(0, ( *light2.L dot normalize(N) )) * *light2.color )
-            //        + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
-          }
+          rgb = add_vectors( rgb, add_vectors( scale_vector( fmax( 0, dot_vectors( normalize(L), surface_normal ) ), kd ), 
+                                               scale_vector( fmax( 0, pow( dot_vectors( Rm,  normalize( L ) ), sp ) ), ks ) ) );
+         
+          // Rm = ( 2 * ( normalize(*light2.L) dot normalize(N) ) * normalize(N) ) - *light2.L;
+          // sum += ( kd * max(0, ( *light2.L dot normalize(N) )) * *light2.color )
+          //        + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
         }
 
-        rgb = add_vectors( rgb, ka );
+        rgb = add_vectors( rgb, ka ); // Add the ambient term
 
         // setPixel(i, j, Ip.r, Ip.g, Ip.b);
 
         // THIS IS THE MAGIC
         // TODO: find r,g,b for each pixel
         setPixel(i, j, rgb.at(0), rgb.at(1), rgb.at(2));
-
-        
 
         // This is amusing, but it assumes negative color values are treated reasonably.
         // setPixel(i,j, x/radius, y/radius, z/radius );
