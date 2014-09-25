@@ -104,7 +104,39 @@ void setPixel(int x, int y, GLfloat r, GLfloat g, GLfloat b) {
 // Draw a filled circle.  
 //****************************************************
 
-void multiply_vectors(vector<float> a, vector<float> b ) {
+vector<float> multiply_vectors(vector<float> a, vector<float> b ) {
+    std::vector<float> add(3);
+    add.at(0) = a.at(0) * b.at(0);
+    add.at(1) = a.at(1) * b.at(1);
+    add.at(2) = a.at(2) * b.at(2);
+    return add;
+}
+
+float dot_vectors(vector<float> a, vector<float> b ) {
+    return a.at(0) * b.at(0) + a.at(1) * b.at(1) + a.at(2) * b.at(2);
+}
+
+vector<float> add_vectors(vector<float> a, vector<float> b ) {
+    std::vector<float> add(3);
+    add.at(0) = a.at(0) + b.at(0);
+    add.at(1) = a.at(1) + b.at(1);
+    add.at(2) = a.at(2) + b.at(2);
+    return add;
+}
+
+vector<float> subtract_vectors(vector<float> a, vector<float> b ) {
+    std::vector<float> sub(3);
+    sub.at(0) = a.at(0) - b.at(0);
+    sub.at(1) = a.at(1) - b.at(1);
+    sub.at(2) = a.at(2) - b.at(2);
+    return sub;
+}
+
+vector<float> scale_vector(int a, vector<float> v ) {
+  v.at(0) = v.at(0) * a;
+  v.at(1) = v.at(1) * a;
+  v.at(2) = v.at(2) * a;
+  return v;
 }
 
 void circle(float centerX, float centerY, float radius) {
@@ -150,9 +182,13 @@ void circle(float centerX, float centerY, float radius) {
         std::vector<float> surface_normal(3);
 
 
-        rgb.at(0) = ka.at(0);
-        rgb.at(1) = ka.at(1);
-        rgb.at(2) = ka.at(2);
+        rgb.at(0) = 0.0;
+        rgb.at(1) = 0.0;
+        rgb.at(2) = 0.0;
+
+        // rgb.at(0) = ka.at(0);
+        // rgb.at(1) = ka.at(1);
+        // rgb.at(2) = ka.at(2);
 
         // Find the vector from {x,y,z} - centerPoint to 
         surface_normal.at(0) = x - centerX;
@@ -164,12 +200,15 @@ void circle(float centerX, float centerY, float radius) {
         // std::cout << "\n" << ' ';
         // N = Normal at this point on surface; //used to be in every iteration of loop
 
-
         std::vector< std::vector<float> >::iterator row;
         std::vector<float>::iterator light;
         for( row = directional_lights.begin(); row != directional_lights.end(); row ++){
-          for (light = row->begin(); light != row->end(); light++){
-            // Rm = ( 2 * ( normalize(*light.L) dot normalize(N) ) * normalize(N) ) - *light.L;
+          for (light = row->begin(); light != row->end(); light++) {
+            Rm =  subtract_vectors( scale_vector( 2 * dot_vectors( normalize(*light.L), N ), surface_normal ), N ),
+                                    *light.L );
+            
+            rgb = add_vectors( rgb, add_vectors( scale_vector( max( 0, dot_vectors( *light.L, surface_normal) ), kd ), 
+                                                 scale_vector( max( 0, pow( dot_vectors( Rm,  normalize(*light.L) ), sp ) ), ks ) ) );
             // sum += ( kd * max(0, ( *light.L dot normalize(N) )) * *light.color )
             //        + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
           }
@@ -185,6 +224,8 @@ void circle(float centerX, float centerY, float radius) {
             //        + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
           }
         }
+
+        rgb = add_vectors( rgb, ka );
 
         // setPixel(i, j, Ip.r, Ip.g, Ip.b);
 
