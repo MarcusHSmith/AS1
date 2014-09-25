@@ -145,32 +145,30 @@ void circle(float centerX, float centerY, float radius) {
 
         float sum = 0.0f;
 
-        for (std::vector<float>::iterator light = directional_lights.begin(); light != directional_lights.end(); ++light) {
-          /* std::cout << *it; ... */
-        //   N = Normal at this point on surface;
-        //   Rm = ( 2 * ( normalize(*light.L) dot normalize(N) ) * normalize(N) ) - *light.L;
-        //   sum += ( kd * max(0, ( *light.L dot normalize(N) )) * *light.color )
-        //          + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
+        //   N = Normal at this point on surface; //used to be in every iteration of loop
+
+        std::vector< std::vector<float> >::iterator row;
+        std::vector<float>::iterator light;
+        for( row = directional_lights.begin(); row != directional_lights.end(); row ++){
+          for (light = row->begin(); light != row->end(); light++){
+            //   Rm = ( 2 * ( normalize(*light.L) dot normalize(N) ) * normalize(N) ) - *light.L;
+            //   sum += ( kd * max(0, ( *light.L dot normalize(N) )) * *light.color )
+            //          + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
+          }
         }
 
-        for (std::vector<float>::iterator light = point_lights.begin(); light != point_lights.end(); ++light) {
-          /* std::cout << *it; ... */
-        //   N = Normal at this point on surface;
-        //   Rm = ( 2 * ( normalize(*light.L) dot normalize(N) ) * normalize(N) ) - *light.L;
-        //   sum += ( kd * max(0, ( *light.L dot normalize(N) )) * *light.color )
-        //          + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
+          
+        std::vector< std::vector<float> >::iterator row2;
+        std::vector<float>::iterator light2;
+        for( row2 = point_lights.begin(); row2 != point_lights.end(); row2 ++){
+          for (light2 = row2->begin(); light2 != row2->end(); light2++){
+          //   Rm = ( 2 * ( normalize(*light2.L) dot normalize(N) ) * normalize(N) ) - *light2.L;
+          //   sum += ( kd * max(0, ( *light2.L dot normalize(N) )) * *light2.color )
+          //          + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
+          }
         }
 
-        // for (int i = 0; i < lights.length; ++i)
-        // {
-        //   N = Normal at this point on surface;
-        //   Rm = ( 2 * ( normalize(lights[i].L) dot normalize(N) ) * normalize(N) ) - lights[i].L;
-        //   sum += ( kd * ( lights[i].L dot normalize(N) ) * lights[i].color )
-        //          + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
-        // }
-        // Ip = (ka * ia) + sum
         // setPixel(i, j, Ip.r, Ip.g, Ip.b);
-
 
         // THIS IS THE MAGIC
         // TODO: find r,g,b for each pixel
@@ -193,8 +191,6 @@ void circle(float centerX, float centerY, float radius) {
 // function that does the actual drawing of stuff
 //***************************************************
 void myDisplay() {
-    cout << "Main";
-
   glClear(GL_COLOR_BUFFER_BIT);				// clear the color buffer
 
   glMatrixMode(GL_MODELVIEW);			        // indicate we are specifying camera transformations
@@ -221,17 +217,28 @@ void myDisplay() {
 
 // }
 
+bool isColor(string object) {
+  return object.compare("-ka") == 0 || object.compare("-kd") == 0
+         || object.compare("-ks") == 0;
+}
+
+bool isLight(string object) {
+  return object.compare("-dl") == 0 || object.compare("-pl") == 0;
+}
+
 // TODO FINISH THIS SHIT
 bool check_inputs(int inputs, string object) {
-  if ( (inputs == 3 && object ) ) {
-    object += "has been created";
+  if ( ( inputs == 3 && isColor(object) ) 
+       || ( inputs == 6 && isLight(object) ) 
+       || ( inputs == 1 && ( object.compare("-sp") == 0 ) ) ) {
+    object += " has been created";
     std::cout << object <<std::endl;
-    return TRUE;
+    return 1;
   }
   else {
-    object += "doesn't have enough inputs.";
+    object += " has an incorrect number of inputs.";
     std::cout << object <<std::endl;
-    return FALSE;
+    return 0;
   }
 }
 
@@ -265,54 +272,73 @@ int main(int argc, char *argv[]) {
     // while (os >> temp) {                //the stringstream makes temp a token
     os >> temp;
     inputs = 0;
-    if (temp.compare("-ka") != 0) {
+    if (temp.compare("-ka") == 0 && ka.size() == 0) {
       //create the -ka r g b
       while (os >> temp) {
         ka.push_back(std::stof(temp));
         inputs ++;
       }
-      check_inputs(inputs, "-ka");
+      if (!check_inputs(inputs, "-ka")) {
+        ka.clear();
+      }
     }
-    if (temp.compare("-kd") != 0) {
+    if (temp.compare("-kd") == 0) {
       //create the -kd r g b
       while (os >> temp) {
         kd.push_back(std::stof(temp));
+        inputs ++;
       }
-      check_inputs(inputs, "-kd");
+      if (!check_inputs(inputs, "-kd")) {
+        kd.clear();
+      }
     }
-    if (temp.compare("-ks") != 0) {
+    if (temp.compare("-ks") == 0) {
       //create the -ks r g b
       while (os >> temp) {
         ks.push_back(std::stof(temp));
+        inputs ++;
       }
-      check_inputs(inputs, "-ks");
+      if (!check_inputs(inputs, "-ks")) {
+        ks.clear();
+      }
     }
-    if (temp.compare("-sp") != 0) {
+    if (temp.compare("-sp") == 0) {
       //create the -sp v
       while (os >> temp) {
         sp = std::stof(temp);
+        inputs ++;
       }
-      check_inputs(inputs, "-sp");
+      if (!check_inputs(inputs, "-sp")) {
+        sp = -1.0f;
+      }
     }
-    if (temp.compare("-pl") != 0) {
+    if (temp.compare("-pl") == 0) {
       //create the -pl x y z r g b
       std::vector<float> pl;
       while (os >> temp) {
         pl.push_back(std::stof(temp));
+        inputs ++;
       }
-      if (check_inputs(inputs, "-ka")) {
+      if (check_inputs(inputs, "-pl")) {
         point_lights.push_back(pl);
       }
+      else {
+        pl.clear();
+      }
     }
-    if (temp.compare("-dl") != 0) {
+    if (temp.compare("-dl") == 0) {
       //create the -dl x y z r g b
       std::vector<float> dl;
       while (os >> temp) {
         dl.push_back(std::stof(temp));
+        inputs ++;
       }
-      if (check_inputs(inputs, "-ka")) {
-        directional_lights.push_back(pl);
-      }    
+      if (check_inputs(inputs, "-dl")) {
+        directional_lights.push_back(dl);
+      }
+      else {
+        dl.clear();
+      }
     }
     getline(cin, s);
   }
@@ -341,6 +367,14 @@ int main(int argc, char *argv[]) {
 
 
 
+        // for (int i = 0; i < lights.length; ++i)
+        // {
+        //   N = Normal at this point on surface;
+        //   Rm = ( 2 * ( normalize(lights[i].L) dot normalize(N) ) * normalize(N) ) - lights[i].L;
+        //   sum += ( kd * ( lights[i].L dot normalize(N) ) * lights[i].color )
+        //          + ks * max(0, pow( normalize(Rm) dot normalize(V), sp));
+        // }
+        // Ip = (ka * ia) + sum
 
 
 
