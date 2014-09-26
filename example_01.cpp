@@ -24,7 +24,7 @@
 #include <time.h>
 #include <math.h>
 
-
+#define KEY_SPC 32 // SPACE BAR
 #define PI 3.14159265  // Should be used from mathlib
 inline float sqr(float x) { return x*x; }
 
@@ -47,6 +47,8 @@ class Viewport {
 //****************************************************
 Viewport	viewport;
 int WindowId;
+
+
 
 // Colors [r, g, b]
 std::vector<float> ka(3);
@@ -296,18 +298,16 @@ void myDisplay() {
   glutSwapBuffers();					// swap buffers (we earlier set double buffer)
 }
 
+void keyboarding (unsigned char key, int x, int y){
+    switch (key){
+        case 32:
+            glutDestroyWindow ( WindowId );
+            break;
+        default:
+            break;
+    }
+}
 
-// void Update (DWORD milliseconds)                // Perform Motion Updates Here
-// {
-//     if (g_keys->keyDown [' '] == TRUE)           // Is the Space Bar Being Pressed?
-//     {
-//         glutDestroyWindow ( Win.id );
-//         exit (0);
- 
-//         g_keys->keyDown [' '] = FALSE;
-//     }
-
-// }
 
 bool isColor(string object) {
   return object.compare("-ka") == 0 || object.compare("-kd") == 0
@@ -450,6 +450,7 @@ int main(int argc, char *argv[]) {
   glutDisplayFunc(myDisplay);				// function to run when its time to draw something
   glutReshapeFunc(myReshape);				// function to run when the window gets resized
 
+  glutKeyboardFunc(keyboarding);
   glutMainLoop();							// infinite loop that will keep drawing and resizing
   // and whatever else
 
