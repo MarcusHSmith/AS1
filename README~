@@ -1,0 +1,35 @@
+Assignment 1
+Marcus Smith & Josh Perline
+cs184-ee       cs184-bw
+
+Files:
+All the files used for this project are included in the submission.
+The makefile was not changed, but it is included
+example_01.cpp is where our changes were made
+example_01-original.cpp is the default project file and is not used
+
+Tutorial:
+1) open directory
+2) $ make
+3) $ ./as1
+4) [enter command line arguments]
+5) [each argument needs it's own line - Example below]
+6) [press ENTER to run and view OpenGL]
+7) ***ENJOY***
+8) [to close click on OpenGL window and press the SPACEBAR or exit program from terminal]
+
+Example:
+as1: ./as1
+-pl 200 200 200 0.6 0.6 0.6
+-kd 1 1 0.0
+-ka 0.1 0.9 0.9
+-ks 0.8 0.8 0.8
+-sp 16
+
+Features:
+1) Ambient Color
+2) Diffuse Color
+3) Specular Color
+4) Power Coefficient
+5) Point Light
+6) Directional Light
